@@ -59,6 +59,13 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.Bitmap.Config;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.text.TextPaint;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
@@ -75,6 +82,7 @@ import android.util.Log;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.PermissionInfo;
+
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -122,6 +130,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private String watermarkText;           // Allow user to insert custom text
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -178,6 +187,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            this.watermarkText = args.getString(12);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -1375,6 +1385,7 @@ private void processResultFromGallery(int destType, Intent intent) {
                 CompressFormat.PNG;
 
         try {
+            bitmap = this.addWatermark(exifJson, bitmap);
             if (bitmap.compress(compressFormat, mQuality, jpeg_data)) {
                 byte[] code = jpeg_data.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
@@ -1534,6 +1545,84 @@ private void processResultFromGallery(int destType, Intent intent) {
         String path = external_storage.getAbsolutePath() + partial_path;
         return path;
 
+    }
+
+    private Bitmap addWatermark(String exifJson, Bitmap bitmap) {
+        try {
+            JSONObject exifObject = new JSONObject(exifJson);
+            android.graphics.Bitmap.Config bitmapConfig =
+            bitmap.getConfig();
+            // set default bitmap config if none
+            if(bitmapConfig == null) {
+                bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+            }
+
+            String watermarkTextSub1 = new String("");
+            String watermarkTextSub2 = new String("");
+            String dateTime = new String(exifObject.getString("datetime"));
+            String lat = new String(exifObject.getString("gpsLatitudeDD"));
+            String lng = new String(exifObject.getString("gpsLongitudeDD"));
+
+            // resource bitmaps are imutable, 
+            // so we need to convert it to mutable one
+            bitmap = bitmap.copy(bitmapConfig, true);
+                
+            Canvas canvas = new Canvas(bitmap);
+
+            // new antialiased Paint
+            TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            paint.setTypeface(Typeface.create("Arial", Typeface.BOLD));
+            // text color - #3D3D3D 61, 61, 61
+            paint.setColor(Color.rgb(250, 0, 0));
+
+            // draw text to the Canvas center
+            Rect bounds = new Rect();
+
+            paint.getTextBounds(dateTime, 0, dateTime.length(), bounds);
+            
+            if (this.watermarkText.length() >= 30) {
+                watermarkTextSub1 = this.watermarkText.substring(0, 29);
+                watermarkTextSub2 = this.watermarkText.substring(29);
+            } else {
+                watermarkTextSub1 = this.watermarkText;
+            }
+            
+            if (watermarkTextSub2.length() > 0 && watermarkTextSub2.length() > 30) {
+                String temp = new String("qwertyuiopasdfghjklzxcvbnmqwer");
+                paint.getTextBounds(temp, 0, temp.length(), bounds);
+                watermarkTextSub2 = this.watermarkText.substring(29, 60).concat("...");
+            }
+
+            // text size in pixels
+            float desiredTextSize = 11 * (bitmap.getWidth() / 2) / bounds.width();
+            paint.setTextSize(desiredTextSize);
+            // text shadow
+            paint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+            int y = (bitmap.getHeight() - bounds.bottom);
+            
+            if (watermarkTextSub1.length() > 0 && watermarkTextSub2.length() > 0) {
+                canvas.drawText(watermarkTextSub1, 0, y - 120, paint);
+                canvas.drawText(watermarkTextSub2, 0, y - 90, paint);
+            } else {
+                canvas.drawText(watermarkTextSub1, 0, y - 90, paint);
+            }
+
+            canvas.drawText(dateTime, 0, y - 60, paint);
+
+            paint.getTextBounds(lat, 0, lat.length(), bounds);
+            canvas.drawText(lat, 0, y - 30, paint);
+            
+            paint.getTextBounds(lng, 0, lng.length(), bounds);
+            canvas.drawText(lng, 0, y, paint);
+            
+            canvas.save(Canvas.ALL_SAVE_FLAG);
+            canvas.restore();
+
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return bitmap;
     }
 
 }

@@ -19,6 +19,10 @@
 package org.apache.cordova.camera;
 
 import java.io.IOException;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Calendar;
 
 import android.media.ExifInterface;
 
@@ -34,8 +38,10 @@ public class ExifHelper {
      private String gpsAltitudeRef = null;
      private String gpsDateStamp = null;
      private String gpsLatitude = null;
+     private String gpsLatitudeDD = null;
      private String gpsLatitudeRef = null;
      private String gpsLongitude = null;
+     private String gpsLongitudeDD = null;
      private String gpsLongitudeRef = null;
      private String gpsProcessingMethod = null;
      private String gpsTimestamp = null;
@@ -92,6 +98,8 @@ public class ExifHelper {
         this.model = inFile.getAttribute(ExifInterface.TAG_MODEL);
         this.orientation = inFile.getAttribute(ExifInterface.TAG_ORIENTATION);
         this.whiteBalance = inFile.getAttribute(ExifInterface.TAG_WHITE_BALANCE);
+        this.gpsLatitudeDD = this.getLatitudeInDD();
+        this.gpsLongitudeDD = this.getLongitudeInDD();
     }
 
 
@@ -181,6 +189,67 @@ public class ExifHelper {
         } else {
             return 0;
         }
+    }
+
+    public String getLatitudeInDD() {
+        String lat = "";
+        if (this.gpsLatitudeRef == "S") {
+             lat = "-";
+        }
+        if (this.gpsLatitude != null) {
+            lat = lat + this.getFormattedLocation(this.gpsLatitude);
+        } else {
+            lat = "Not Availble.";
+        }
+
+        return  "LAT : " + lat;
+    }
+
+    public String getDateTime() {
+        if (this.datetime != null) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ");
+            String dateTime = "";
+            try {  
+                Date parseDate = format.parse(this.datetime);
+                dateTime = dateFormat.format(parseDate);
+            } catch (ParseException e) {
+                e.printStackTrace();  
+            }
+
+            return "Date : " + dateTime;
+        } else {
+            return "Date : Not Available.";
+        }
+    }
+
+    public String getLongitudeInDD() {
+        String lon = "";
+        if (this.gpsLongitudeRef == "W") {
+             lon = "-";
+        }
+        if (this.gpsLongitude != null) {
+            lon = lon + this.getFormattedLocation(this.gpsLongitude);
+        } else {
+            lon = "Not Availble.";
+        }
+
+        return  "LNG : " + lon;
+    }
+
+    private String getFormattedLocation(String location){
+        String[] DMS = location.split(",");
+
+        Double l1 = this.EXIFdivide(DMS[0]);
+        Double l2 = (this.EXIFdivide(DMS[1])/60);
+        Double l3 = (this.EXIFdivide(DMS[2])/3600);
+    
+        return Double.toString(l1 + l2 + l3);
+    }
+
+    private Double EXIFdivide(String location) {
+        String[] locPart = location.split("/");
+        return Double.parseDouble(locPart[0]) / Double.parseDouble(locPart[1]);
     }
 
     public void resetOrientation() {

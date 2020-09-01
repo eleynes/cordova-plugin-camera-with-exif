@@ -131,8 +131,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
     private String watermarkText;           // Allow user to insert custom text
-    private String lat;                     // Allow user to insert custom text
-    private String long;                     // Allow user to insert custom text
+    private String clientLat;               // Allow user to insert client's latitude
+    private String clientLong;              // Allow user to insert client's longitude
+
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -190,8 +191,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
             this.watermarkText = args.getString(12);
-            this.lat = args.getString(13);
-            this.long = args.getString(14);
+            this.clientLat = args.getString(13);
+            this.clientLong = args.getString(14);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -1568,10 +1569,9 @@ private void processResultFromGallery(int destType, Intent intent) {
             // String lng = new String(exifObject.getString("gpsLongitudeDD"));
 
             Date date = new Date();
-
-            String dateTime = new String(new Timestamp(date.getTime()));
-            String lat = this.lat;
-            String lng = this.long;
+            String dateTime = new Timestamp(date.getTime()).toString();
+            String lat = this.clientLat;
+            String lng = this.clientLong;
 
             // resource bitmaps are imutable, 
             // so we need to convert it to mutable one

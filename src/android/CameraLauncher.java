@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -83,7 +84,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.PermissionInfo;
 
-
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -131,6 +131,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
     private String watermarkText;           // Allow user to insert custom text
+    private String lat;                     // Allow user to insert custom text
+    private String long;                     // Allow user to insert custom text
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -188,6 +190,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
             this.watermarkText = args.getString(12);
+            this.lat = args.getString(13);
+            this.long = args.getString(14);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -1559,9 +1563,15 @@ private void processResultFromGallery(int destType, Intent intent) {
 
             String watermarkTextSub1 = new String("");
             String watermarkTextSub2 = new String("");
-            String dateTime = new String(exifObject.getString("datetime"));
-            String lat = new String(exifObject.getString("gpsLatitudeDD"));
-            String lng = new String(exifObject.getString("gpsLongitudeDD"));
+            // String dateTime = new String(exifObject.getString("datetime"));
+            // String lat = new String(exifObject.getString("gpsLatitudeDD"));
+            // String lng = new String(exifObject.getString("gpsLongitudeDD"));
+
+            Date date = new Date();
+
+            String dateTime = new String(new Timestamp(date.getTime()));
+            String lat = this.lat;
+            String lng = this.long;
 
             // resource bitmaps are imutable, 
             // so we need to convert it to mutable one

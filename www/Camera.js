@@ -60,8 +60,8 @@ cameraExport.getPicture = function(successCallback, errorCallback, options) {
     var popoverOptions = getValue(options.popoverOptions, null);
     var cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
     var watermarkText = getValue(options.watermarkText, "Not Available");
-    var lat = getValue(options.coordinates, "0");
-    var long = getValue(options.coordinates, "0");
+    var lat = getValue(options.lat, "0");
+    var long = getValue(options.long, "0");
 
     var args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
                 mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection, watermarkText, lat, long];

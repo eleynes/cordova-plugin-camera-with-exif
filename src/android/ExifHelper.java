@@ -98,8 +98,8 @@ public class ExifHelper {
         this.model = inFile.getAttribute(ExifInterface.TAG_MODEL);
         this.orientation = inFile.getAttribute(ExifInterface.TAG_ORIENTATION);
         this.whiteBalance = inFile.getAttribute(ExifInterface.TAG_WHITE_BALANCE);
-        this.gpsLatitudeDD = this.getLatitudeInDD();
-        this.gpsLongitudeDD = this.getLongitudeInDD();
+        // this.gpsLatitudeDD = this.getLatitudeInDD();
+        // this.gpsLongitudeDD = this.getLongitudeInDD();
     }
 
 

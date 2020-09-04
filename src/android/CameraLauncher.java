@@ -1570,8 +1570,8 @@ private void processResultFromGallery(int destType, Intent intent) {
 
             Date date = new Date();
             String dateTime = new Timestamp(date.getTime()).toString();
-            String lat = this.clientLat;
-            String lng = this.clientLong;
+            String lat = "LAT : " + this.clientLat;
+            String lng = "LNG : " + this.clientLong;
 
             // resource bitmaps are imutable, 
             // so we need to convert it to mutable one
